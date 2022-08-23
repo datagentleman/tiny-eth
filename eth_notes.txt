@@ -11,7 +11,5 @@
 
       -- ChainID    *big.Int
       -- GasFeeCap  *big.Int
+      -- GasTipCap  *big.Int
       -- AccessList AccessList
-
-
-
