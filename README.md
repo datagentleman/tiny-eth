@@ -1,6 +1,6 @@
 # tiny-eth
 
-This is ethereum implementation from scratch - I want to learn how it's working under the hood.
+This is ethereum implementation from scratch.
 
 :money_with_wings: In other words I want to hack it and take all your crypto :money_with_wings:
 

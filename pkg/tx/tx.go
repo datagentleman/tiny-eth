@@ -2,6 +2,8 @@ package tx
 
 import (
 	"math/big"
+	"sync/atomic"
+	"time"
 )
 
 const (
@@ -31,4 +33,9 @@ type Tx struct {
 	Data       []byte     // contract invocation input data
 	AccessList AccessList // EIP-2930 access list
 	V, R, S    *big.Int   // signature values
+
+	firstSeen time.Time // Time first seen locally
+	hash      atomic.Value
+	size      atomic.Value
+	from      atomic.Value
 }
