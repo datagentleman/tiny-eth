@@ -15,11 +15,13 @@ func Encode(values ...interface{}) []byte {
 			encodedList := Encode(toList(v)...)
 			firstByte := 0
 
-			if len(bytes.TrimLeft(encodedList, "\x00")) <= 55 {
-				firstByte = 0xc0 + len(bytes.TrimLeft(encodedList, "\x00"))
+			encodedList = bytes.TrimLeft(encodedList, "\x00")
+
+			if len(encodedList) <= 55 {
+				firstByte = 0xc0 + len(encodedList)
 
 				encoding = append(encoding, byte(firstByte))
-				encoding = append(encoding, bytes.TrimLeft(encodedList, "\x00")...)
+				encoding = append(encoding, encodedList...)
 			} else {
 				lenInBytes, _ := toBytes(len(encodedList))
 				lenInBytes = bytes.TrimLeft(lenInBytes, "\x00")
@@ -28,31 +30,31 @@ func Encode(values ...interface{}) []byte {
 
 				encoding = append(encoding, byte(firstByte))
 				encoding = append(encoding, lenInBytes...)
-				encoding = append(encoding, bytes.TrimLeft(encodedList, "\x00")...)
+				encoding = append(encoding, encodedList...)
 			}
 		} else {
-			bs, _ := toBytes(v)
+			buf, _ := toBytes(v)
 
 			if !isByteArray(v) {
-				bs = bytes.TrimLeft(bs, "\x00")
+				buf = bytes.TrimLeft(buf, "\x00")
 			}
 
-			if len(bs) == 1 && bs[0] <= 0x7f {
-				encoding = append(encoding, bs[0])
-			} else if len(bs) <= 55 {
-				firstByte := 0x80 + len(bs)
+			if len(buf) == 1 && buf[0] <= 0x7f {
+				encoding = append(encoding, buf[0])
+			} else if len(buf) <= 55 {
+				firstByte := 0x80 + len(buf)
 
 				encoding = append(encoding, byte(firstByte))
-				encoding = append(encoding, bs...)
+				encoding = append(encoding, buf...)
 			} else {
-				lenInBytes, _ := toBytes(len(bs))
+				lenInBytes, _ := toBytes(len(buf))
 				lenInBytes = bytes.TrimLeft(lenInBytes, "\x00")
 
 				firstByte := 0xb7 + len(lenInBytes)
 
 				encoding = append(encoding, byte(firstByte))
 				encoding = append(encoding, lenInBytes...)
-				encoding = append(encoding, bs...)
+				encoding = append(encoding, buf...)
 			}
 		}
 	}
@@ -64,18 +66,16 @@ func isList(v interface{}) bool {
 	slice := reflect.TypeOf(v).Kind() == reflect.Slice
 	array := reflect.TypeOf(v).Kind() == reflect.Array
 
-	pttr := reflect.TypeOf(v)
-	if pttr.Kind() == reflect.Pointer {
-		aa := pttr.Elem().Kind() == reflect.Slice || pttr.Elem().Kind() == reflect.Array
-		return aa
+	if isPointer(v) {
+		ptr := reflect.TypeOf(v)
+		return ptr.Elem().Kind() == reflect.Slice || ptr.Elem().Kind() == reflect.Array
 	}
 
 	return slice || array
 }
 
 func isPointer(v interface{}) bool {
-	pttr := reflect.TypeOf(v)
-	return pttr.Kind() == reflect.Pointer
+	return reflect.TypeOf(v).Kind() == reflect.Pointer
 }
 
 func isByteArray(v interface{}) bool {
@@ -99,19 +99,18 @@ func toList(v interface{}) []interface{} {
 		return nil
 	}
 
-	s := []interface{}{}
-	l := reflect.ValueOf(v)
+	list := []interface{}{}
+	ref := reflect.ValueOf(v)
 
-	ll := reflect.ValueOf(v)
-	if ll.IsNil() {
-		return s
+	if ref.IsNil() {
+		return list
 	}
 
-	for i := 0; i < l.Len(); i++ {
-		s = append(s, l.Index(i).Interface())
+	for i := 0; i < ref.Len(); i++ {
+		list = append(list, ref.Index(i).Interface())
 	}
 
-	return s
+	return list
 }
 
 func toBytes(v interface{}) ([]byte, error) {
