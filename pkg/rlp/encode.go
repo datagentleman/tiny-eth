@@ -106,6 +106,10 @@ func toList(v interface{}) []interface{} {
 		return list
 	}
 
+	if isPointer(v) {
+		ref = ref.Elem()
+	}
+
 	for i := 0; i < ref.Len(); i++ {
 		list = append(list, ref.Index(i).Interface())
 	}
