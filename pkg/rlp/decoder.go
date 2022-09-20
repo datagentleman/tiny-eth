@@ -18,28 +18,25 @@ func NewDecoder(encodings []byte) *Decoder {
 	return d
 }
 
-func (d *Decoder) Any() bool {
-	return d.Buf.Len() > 0
-}
-
 func (d *Decoder) Next() *Decoder {
 	return NewDecoder(d.Buf.Bytes())
 }
 
 func (d *Decoder) Decode(v interface{}) {
-	// TODO: For now I'm just playing with decoding slices. More will come.
 	_, list := nextEncoding(d.Buf)
 	buf := bytes.NewBuffer(list)
+
+	encoding := func() []byte {
+		prefix, encoding := nextEncoding(buf)
+		return append(prefix, encoding...)
+	}
 
 	switch v := v.(type) {
 	case *[]int8:
 		var elem int8
 
 		for buf.Len() > 0 {
-			prefix, encoding := nextEncoding(buf)
-			encoding = append(prefix, encoding...)
-
-			Decode(encoding, &elem)
+			Decode(encoding(), &elem)
 			*v = append(*v, elem)
 		}
 
@@ -47,10 +44,7 @@ func (d *Decoder) Decode(v interface{}) {
 		var elem int16
 
 		for buf.Len() > 0 {
-			prefix, encoding := nextEncoding(buf)
-			encoding = append(prefix, encoding...)
-
-			Decode(encoding, &elem)
+			Decode(encoding(), &elem)
 			*v = append(*v, elem)
 		}
 
@@ -58,10 +52,7 @@ func (d *Decoder) Decode(v interface{}) {
 		var elem int32
 
 		for buf.Len() > 0 {
-			prefix, encoding := nextEncoding(buf)
-			encoding = append(prefix, encoding...)
-
-			Decode(encoding, &elem)
+			Decode(encoding(), &elem)
 			*v = append(*v, elem)
 		}
 
@@ -69,10 +60,7 @@ func (d *Decoder) Decode(v interface{}) {
 		var elem int64
 
 		for buf.Len() > 0 {
-			prefix, encoding := nextEncoding(buf)
-			encoding = append(prefix, encoding...)
-
-			Decode(encoding, &elem)
+			Decode(encoding(), &elem)
 			*v = append(*v, elem)
 		}
 
@@ -80,10 +68,7 @@ func (d *Decoder) Decode(v interface{}) {
 		var elem uint16
 
 		for buf.Len() > 0 {
-			prefix, encoding := nextEncoding(buf)
-			encoding = append(prefix, encoding...)
-
-			Decode(encoding, &elem)
+			Decode(encoding(), &elem)
 			*v = append(*v, elem)
 		}
 
@@ -91,10 +76,7 @@ func (d *Decoder) Decode(v interface{}) {
 		var elem uint32
 
 		for buf.Len() > 0 {
-			prefix, encoding := nextEncoding(buf)
-			encoding = append(prefix, encoding...)
-
-			Decode(encoding, &elem)
+			Decode(encoding(), &elem)
 			*v = append(*v, elem)
 		}
 
@@ -102,10 +84,7 @@ func (d *Decoder) Decode(v interface{}) {
 		var elem uint64
 
 		for buf.Len() > 0 {
-			prefix, encoding := nextEncoding(buf)
-			encoding = append(prefix, encoding...)
-
-			Decode(encoding, &elem)
+			Decode(encoding(), &elem)
 			*v = append(*v, elem)
 		}
 
@@ -113,10 +92,7 @@ func (d *Decoder) Decode(v interface{}) {
 		var elem float32
 
 		for buf.Len() > 0 {
-			prefix, encoding := nextEncoding(buf)
-			encoding = append(prefix, encoding...)
-
-			Decode(encoding, &elem)
+			Decode(encoding(), &elem)
 			*v = append(*v, elem)
 		}
 
@@ -124,10 +100,7 @@ func (d *Decoder) Decode(v interface{}) {
 		var elem float64
 
 		for buf.Len() > 0 {
-			prefix, encoding := nextEncoding(buf)
-			encoding = append(prefix, encoding...)
-
-			Decode(encoding, &elem)
+			Decode(encoding(), &elem)
 			*v = append(*v, elem)
 		}
 
