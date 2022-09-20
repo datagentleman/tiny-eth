@@ -84,4 +84,28 @@ func TestDecode(t *testing.T) {
 			t.Errorf("Rlp decoding error. Expected %d got %d\n", example.src, example.dst)
 		}
 	}
+
+	// Decode nested interface{} list
+	src1 := int8(127)
+	src2 := int16(32767)
+	src3 := string("Lorem ipsum dolor sit amet")
+
+	dst1 := int8(0)
+	dst2 := int16(0)
+	dst3 := string("")
+
+	list := []interface{}{&dst1, &dst2, &dst3}
+	Decode(Encode([]interface{}{src1, src2, src3}), &list)
+
+	if src1 != dst1 {
+		t.Errorf("Rlp decoding error. Expected %d got %d", src1, dst1)
+	}
+
+	if src2 != dst2 {
+		t.Errorf("Rlp decoding error. Expected %d got %d", src2, dst2)
+	}
+
+	if src3 != dst3 {
+		t.Errorf("Rlp decoding error. Expected %s got %s", src3, dst3)
+	}
 }

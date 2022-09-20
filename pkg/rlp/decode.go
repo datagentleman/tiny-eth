@@ -14,9 +14,15 @@ func Decode(encodings []byte, values ...interface{}) (int, error) {
 	for _, v := range values {
 		if isList(v) && !isByteArray(v) {
 			// Decode list
-			decoder := NewDecoder(encodings)
-			list := decoder.Next()
-			list.Decode(v)
+			if isEmptyList(v) {
+				decoder := NewDecoder(encodings)
+				list := decoder.Next()
+				list.Decode(v)
+			} else {
+				// TODO: works only for 0-55 bytes long lists
+				encodings = encodings[1:]
+				Decode(encodings, toList(v)...)
+			}
 		} else {
 			// Decode string
 			switch v := v.(type) {
@@ -268,6 +274,10 @@ func ensureLen(buf *[]byte, length int) {
 func isEmptyList(v interface{}) bool {
 	if !isList(v) {
 		return false
+	}
+
+	if isPointer(v) {
+		return reflect.ValueOf(v).Elem().Len() <= 0
 	}
 
 	return reflect.ValueOf(v).Len() <= 0
