@@ -1,14 +1,12 @@
---[ Transactions
+--[ Transaction
 
   - 3 transaction types: legacy, access_list, dynamic_fee
-
     -- /core/types/transaction.go
     -- /core/types/legacy_tx.go
     -- /core/types/access_list_tx.go
     -- /core/types/dynamic_fee_tx.go
     
     From what I see the only differences between them are 
-
       -- ChainID    *big.Int
       -- GasFeeCap  *big.Int
       -- GasTipCap  *big.Int
