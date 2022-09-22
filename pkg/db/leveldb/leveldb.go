@@ -18,6 +18,10 @@ func Open(file string) (*Level, error) {
 	return &Level{db: db}, nil
 }
 
+func (lvl *Level) Close() error {
+	return lvl.db.Close()
+}
+
 func (lvl *Level) Get(key []byte) ([]byte, error) {
 	val, err := lvl.db.Get(key, nil)
 	if err != nil {

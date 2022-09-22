@@ -1,13 +1,23 @@
 --[ Transaction
 
-  - 3 transaction types: legacy, access_list, dynamic_fee
-    -- /core/types/transaction.go
-    -- /core/types/legacy_tx.go
-    -- /core/types/access_list_tx.go
-    -- /core/types/dynamic_fee_tx.go
-    
+  - We have 3 transaction types: legacy, access_list, dynamic_fee
+
     From what I see the only differences between them are 
       -- ChainID    *big.Int
       -- GasFeeCap  *big.Int
       -- GasTipCap  *big.Int
       -- AccessList AccessList
+
+--[ DB
+
+  - Get block by number
+
+    -- First, based on block number we must get block hash_key (GetHashKey())
+    	 hash_key = headerPrefix + encodeBlockNumber(number) + headerHashSuffix 
+  
+    -- Based on hash_key and block number we can generate block key (blockBodyKey())
+	     block_key = blockBodyPrefix + encodeBlockNumber(number) + hash_key 
+
+
+  - Why one block needs so many hashes(keys) in database ?
+
