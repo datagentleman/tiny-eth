@@ -8,6 +8,7 @@
       -- GasTipCap  *big.Int
       -- AccessList AccessList
 
+
 --[ DB
 
   - Get block by number
@@ -20,4 +21,13 @@
 
 
   - Why one block needs so many hashes(keys) in database ?
+
+
+--[ P2P
+
+    - Broadcast transaction
+      - eth/handler.go:BroadcastTransactions()
+
+    - Broadcast block
+      - eth/handler.go:BroadcastBlock()
 

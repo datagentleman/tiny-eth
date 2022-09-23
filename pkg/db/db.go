@@ -2,6 +2,8 @@ package db
 
 import "github.com/datagentleman/tiny-eth/pkg/db/leveldb"
 
+var db DB
+
 type DB interface {
 	Close() error
 
@@ -9,6 +11,13 @@ type DB interface {
 	First(n uint64, prefix []byte) [][]byte
 }
 
-func Open(file string) (DB, error) {
-	return leveldb.Open(file)
+func Open(file string) error {
+	d, err := leveldb.Open(file)
+
+	db = d
+	return err
+}
+
+func Get(key []byte) ([]byte, error) {
+	return db.Get(key)
 }
