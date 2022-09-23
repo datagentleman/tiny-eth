@@ -1,6 +1,7 @@
 package leveldb
 
 import (
+	"errors"
 	"os"
 	"testing"
 )
@@ -8,11 +9,16 @@ import (
 var dbTest *Level
 
 func TestMain(m *testing.M) {
-	dbTest, _ = Open(os.Getenv("ETH_CHAIN_PATH"))
+	err := errors.New("")
+
+	dbTest, err = Open(os.Getenv("ETH_CHAIN_PATH"))
+	if err != nil {
+		panic(err)
+	}
 
 	code := m.Run()
 
-	err := dbTest.Close()
+	err = dbTest.Close()
 	if err != nil {
 		panic(err)
 	}
