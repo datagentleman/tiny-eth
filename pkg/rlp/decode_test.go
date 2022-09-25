@@ -11,6 +11,12 @@ type decodeTest struct {
 	dst interface{}
 }
 
+type TestCustomType []byte
+
+func (c *TestCustomType) SetBytes(b []byte) {
+	*c = append(*c, b...)
+}
+
 var decodeTests = []decodeTest{
 	// Strings
 	{src: int8(127), dst: int8(0)},
@@ -65,47 +71,38 @@ var decodeSlice = []decodeTest{
 
 func TestDecode(t *testing.T) {
 	for _, example := range decodeTests {
-		Decode(Encode(example.src), &example.dst)
+		dec := NewDecoder(Encode(example.src))
+		dec.Decode(&example.dst)
 		if example.src != example.dst {
 			t.Errorf("Rlp decoding error. Expected\n %d got\n %d\n", example.src, example.dst)
 		}
 	}
 
 	for _, example := range decodeBytes {
-		Decode(Encode(example.src), &example.dst)
+		dec := NewDecoder(Encode(example.src))
+		dec.Decode(&example.dst)
 		if !bytes.Equal(example.src.([]byte), example.dst.([]byte)) {
 			t.Errorf("Rlp decoding error. Expected %d got %d\n", example.src, example.dst)
 		}
 	}
 
 	for _, example := range decodeSlice {
-		Decode(Encode(example.src), &example.dst)
+		dec := NewDecoder(Encode(example.src))
+		dec.Decode(&example.dst)
 		if !(reflect.DeepEqual(example.src, example.dst)) {
 			t.Errorf("Rlp decoding error. Expected %d got %d\n", example.src, example.dst)
 		}
 	}
+}
 
-	// Decode nested interface{} list
-	src1 := int8(127)
-	src2 := int16(32767)
-	src3 := string("Lorem ipsum dolor sit amet")
+func TestDecodeCustom(t *testing.T) {
+	src := TestCustomType{100, 200}
+	dst := TestCustomType{}
 
-	dst1 := int8(0)
-	dst2 := int16(0)
-	dst3 := string("")
+	dec := NewDecoder(Encode(src))
+	dec.Decode(&dst)
 
-	list := []interface{}{&dst1, &dst2, &dst3}
-	Decode(Encode([]interface{}{src1, src2, src3}), &list)
-
-	if src1 != dst1 {
-		t.Errorf("Rlp decoding error. Expected %d got %d", src1, dst1)
-	}
-
-	if src2 != dst2 {
-		t.Errorf("Rlp decoding error. Expected %d got %d", src2, dst2)
-	}
-
-	if src3 != dst3 {
-		t.Errorf("Rlp decoding error. Expected %s got %s", src3, dst3)
+	if !(reflect.DeepEqual(src, dst)) {
+		t.Errorf("Rlp decoding error. Expected %d got %d", src, dst)
 	}
 }

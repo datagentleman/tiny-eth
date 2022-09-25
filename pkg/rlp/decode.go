@@ -7,220 +7,150 @@ import (
 	"reflect"
 )
 
-func Decode(encodings []byte, values ...interface{}) (int, error) {
-	enc := bytes.NewBuffer(encodings)
+func (d *Decoder) Decode(values ...interface{}) (int, error) {
 	var encoding []byte
 
 	for _, v := range values {
-		if isList(v) && !isByteArray(v) {
-			// Decode list
-			if isEmptyList(v) {
-				decoder := NewDecoder(encodings)
-				list := decoder.Next()
-				list.Decode(v)
-			} else {
-				// TODO: works only for 0-55 bytes long lists
-				encodings = encodings[1:]
-				Decode(encodings, toList(v)...)
-			}
-		} else {
-			// Decode string
-			switch v := v.(type) {
-			case *interface{}:
-				decodeInterface(v, enc, encodings)
+		if isList(v) {
+			d.DecodeList(v)
+			continue
+		}
 
-			case *bool:
-				_, encoding = nextEncoding(enc)
-				*v = len(encoding) > 0
+		// String
+		switch v := v.(type) {
+		case *interface{}:
+			d.decodeInterface(v)
 
-			case *uint8:
-				_, encoding = nextEncoding(enc)
-				*v = uint8(encoding[0])
+		case *bool:
+			encoding = d.nextEncoding()
+			*v = len(encoding) > 0
 
-			case *uint16:
-				_, encoding = nextEncoding(enc)
-				ensureLen(&encoding, 2)
-				*v = binary.BigEndian.Uint16(encoding)
+		case *uint8:
+			encoding = d.nextEncoding()
+			*v = uint8(encoding[0])
 
-			case *uint32:
-				_, encoding = nextEncoding(enc)
-				ensureLen(&encoding, 4)
-				*v = binary.BigEndian.Uint32(encoding)
+		case *uint16:
+			encoding = d.nextEncoding()
+			ensureLen(&encoding, 2)
+			*v = binary.BigEndian.Uint16(encoding)
 
-			case *uint64:
-				_, encoding = nextEncoding(enc)
-				ensureLen(&encoding, 8)
-				*v = binary.BigEndian.Uint64(encoding)
+		case *uint32:
+			encoding = d.nextEncoding()
+			ensureLen(&encoding, 4)
+			*v = binary.BigEndian.Uint32(encoding)
 
-			case *int8:
-				_, encoding = nextEncoding(enc)
-				*v = int8(encoding[0])
+		case *uint64:
+			encoding = d.nextEncoding()
+			ensureLen(&encoding, 8)
+			*v = binary.BigEndian.Uint64(encoding)
 
-			case *int16:
-				_, encoding = nextEncoding(enc)
-				ensureLen(&encoding, 2)
-				*v = (int16)(binary.BigEndian.Uint16(encoding))
+		case *int8:
+			encoding = d.nextEncoding()
+			*v = int8(encoding[0])
 
-			case *int32:
-				_, encoding = nextEncoding(enc)
-				ensureLen(&encoding, 4)
-				*v = (int32)(binary.BigEndian.Uint32(encoding))
+		case *int16:
+			encoding = d.nextEncoding()
+			ensureLen(&encoding, 2)
+			*v = (int16)(binary.BigEndian.Uint16(encoding))
 
-			case *int64:
-				_, encoding = nextEncoding(enc)
-				ensureLen(&encoding, 8)
-				*v = (int64)(binary.BigEndian.Uint64(encoding))
+		case *int32:
+			encoding = d.nextEncoding()
+			ensureLen(&encoding, 4)
+			*v = (int32)(binary.BigEndian.Uint32(encoding))
 
-			case *float32:
-				_, encoding = nextEncoding(enc)
-				ensureLen(&encoding, 4)
-				buf := bytes.NewReader(encoding)
-				binary.Read(buf, binary.BigEndian, v)
+		case *int64:
+			encoding = d.nextEncoding()
+			ensureLen(&encoding, 8)
+			*v = (int64)(binary.BigEndian.Uint64(encoding))
 
-			case *float64:
-				_, encoding = nextEncoding(enc)
-				ensureLen(&encoding, 8)
-				buf := bytes.NewReader(encoding)
-				binary.Read(buf, binary.BigEndian, v)
+		case *float32:
+			encoding = d.nextEncoding()
+			ensureLen(&encoding, 4)
+			buf := bytes.NewReader(encoding)
+			binary.Read(buf, binary.BigEndian, v)
 
-			case *string:
-				_, encoding = nextEncoding(enc)
-				*v = string(encoding)
+		case *float64:
+			encoding = d.nextEncoding()
+			ensureLen(&encoding, 8)
+			buf := bytes.NewReader(encoding)
+			binary.Read(buf, binary.BigEndian, v)
 
-			case *[]uint8:
-				_, encoding = nextEncoding(enc)
-				*v = append(*v, encoding...)
+		case *string:
+			encoding = d.nextEncoding()
+			*v = string(encoding)
 
-			default:
-				fmt.Println("Unknown type:")
-				fmt.Println(reflect.TypeOf(v))
-			}
+		default:
+			fmt.Println("Unknown type 2:")
+			fmt.Println(reflect.TypeOf(v))
 		}
 	}
 
 	return len(encoding), nil
 }
 
-func decodeInterface(v interface{}, enc *bytes.Buffer, encodings []byte) {
+func (d *Decoder) decodeInterface(v interface{}) {
 	switch v := v.(type) {
 	case *interface{}:
 		if isList(*v) {
-			switch reflect.TypeOf(*v).Elem().Kind() {
+			kind := reflect.TypeOf(*v).Elem().Kind()
 
+			if kind == reflect.Array || kind == reflect.Slice {
+				kind = reflect.TypeOf(*v).Elem().Elem().Kind()
+			}
+
+			switch kind {
 			case reflect.Uint8:
-				tmp := []byte{}
-				Decode(encodings, &tmp)
-				*v = tmp
-
+				decodeInterfaceList(d, v, []byte{})
 			case reflect.Int8:
-				tmp := []int8{}
-				Decode(encodings, &tmp)
-				*v = tmp
-
+				decodeInterfaceList(d, v, []int8{})
 			case reflect.Int16:
-				tmp := []int16{}
-				Decode(encodings, &tmp)
-				*v = tmp
-
+				decodeInterfaceList(d, v, []int16{})
 			case reflect.Int32:
-				tmp := []int32{}
-				Decode(encodings, &tmp)
-				*v = tmp
-
+				decodeInterfaceList(d, v, []int32{})
 			case reflect.Int64:
-				tmp := []int64{}
-				Decode(encodings, &tmp)
-				*v = tmp
-
+				decodeInterfaceList(d, v, []int64{})
 			case reflect.Uint16:
-				tmp := []uint16{}
-				Decode(encodings, &tmp)
-				*v = tmp
-
+				decodeInterfaceList(d, v, []uint16{})
 			case reflect.Uint32:
-				tmp := []uint32{}
-				Decode(encodings, &tmp)
-				*v = tmp
-
+				decodeInterfaceList(d, v, []uint32{})
 			case reflect.Uint64:
-				tmp := []uint64{}
-				Decode(encodings, &tmp)
-				*v = tmp
-
+				decodeInterfaceList(d, v, []uint64{})
 			case reflect.Float32:
-				tmp := []float32{}
-				Decode(encodings, &tmp)
-				*v = tmp
-
+				decodeInterfaceList(d, v, []float32{})
 			case reflect.Float64:
-				tmp := []float64{}
-				Decode(encodings, &tmp)
-				*v = tmp
+				decodeInterfaceList(d, v, []float64{})
+			default:
+				fmt.Println("Unknown type:")
+				fmt.Println(v)
 			}
 		} else {
 			a := reflect.TypeOf(*v)
 
 			switch a.Kind() {
 			case reflect.Bool:
-				var tmp bool
-				Decode(encodings, &tmp)
-				*v = tmp
-
+				decodeInterfaceString(d, v, bool(false))
 			case reflect.Uint8:
-				var tmp uint8
-				Decode(encodings, &tmp)
-				*v = tmp
-
+				decodeInterfaceString(d, v, uint8(0))
 			case reflect.Uint16:
-				var tmp uint16
-				Decode(encodings, &tmp)
-				*v = tmp
-
+				decodeInterfaceString(d, v, uint16(0))
 			case reflect.Uint32:
-				var tmp uint32
-				Decode(encodings, &tmp)
-				*v = tmp
-
+				decodeInterfaceString(d, v, uint32(0))
 			case reflect.Uint64:
-				var tmp uint64
-				Decode(encodings, &tmp)
-				*v = tmp
-
+				decodeInterfaceString(d, v, uint64(0))
 			case reflect.Int8:
-				var tmp int8
-				Decode(encodings, &tmp)
-				*v = tmp
-
+				decodeInterfaceString(d, v, int8(0))
 			case reflect.Int16:
-				var tmp int16
-				Decode(encodings, &tmp)
-				*v = tmp
-
+				decodeInterfaceString(d, v, int16(0))
 			case reflect.Int32:
-				var tmp int32
-				Decode(encodings, &tmp)
-				*v = tmp
-
+				decodeInterfaceString(d, v, int32(0))
 			case reflect.Int64:
-				var tmp int64
-				Decode(encodings, &tmp)
-				*v = tmp
-
+				decodeInterfaceString(d, v, int64(0))
 			case reflect.Float32:
-				var tmp float32
-				Decode(encodings, &tmp)
-				*v = tmp
-
+				decodeInterfaceString(d, v, float32(0))
 			case reflect.Float64:
-				var tmp float64
-				Decode(encodings, &tmp)
-				*v = tmp
-
+				decodeInterfaceString(d, v, float64(0))
 			case reflect.String:
-				var tmp string
-				Decode(encodings, &tmp)
-				*v = tmp
-
+				decodeInterfaceString(d, v, string(""))
 			default:
 				fmt.Println("Unknown type:")
 				fmt.Println(a)
@@ -229,35 +159,35 @@ func decodeInterface(v interface{}, enc *bytes.Buffer, encodings []byte) {
 	}
 }
 
-func nextEncoding(encodings *bytes.Buffer) (prefix, encoding []byte) {
-	firstByte := encodings.Next(1)
+func (d *Decoder) nextEncoding() []byte {
+	firstByte := d.Encodings.Next(1)
 	size := firstByte[0]
 
 	if size <= 0x7f {
-		return nil, firstByte
+		return firstByte
 	}
 
 	if size <= 0xb7 {
 		len := int(size - 0x80)
-		return firstByte, encodings.Next(len)
+		return d.Encodings.Next(len)
 	}
 
 	if size <= 0xbf {
 		len := int(size - 0xb7)
-		buf := encodings.Next(len)
+		buf := d.Encodings.Next(len)
 		ensureLen(&buf, 8)
 
 		size := (int)(binary.BigEndian.Uint64(buf))
-		return firstByte, encodings.Next(size)
+		return d.Encodings.Next(size)
 	}
 
 	if size <= 0xf7 {
 		len := int(size - 0xc0)
-		return firstByte, encodings.Next(len)
+		return d.Encodings.Next(len)
 	}
 
-	fmt.Println("unknown encoding type")
-	return nil, nil
+	fmt.Println("Unknown type")
+	return nil
 }
 
 func ensureLen(buf *[]byte, length int) {
@@ -269,16 +199,4 @@ func ensureLen(buf *[]byte, length int) {
 
 		*buf = append(b[:l], *buf...)
 	}
-}
-
-func isEmptyList(v interface{}) bool {
-	if !isList(v) {
-		return false
-	}
-
-	if isPointer(v) {
-		return reflect.ValueOf(v).Elem().Len() <= 0
-	}
-
-	return reflect.ValueOf(v).Len() <= 0
 }

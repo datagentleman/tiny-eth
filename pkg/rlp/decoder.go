@@ -7,105 +7,76 @@ import (
 )
 
 type Decoder struct {
-	Buf *bytes.Buffer
+	Encodings *bytes.Buffer
+}
+
+type ByteSetter interface {
+	SetBytes([]byte)
 }
 
 func NewDecoder(encodings []byte) *Decoder {
-	d := &Decoder{
-		Buf: bytes.NewBuffer(encodings),
-	}
-
-	return d
+	return &Decoder{Encodings: bytes.NewBuffer(encodings)}
 }
 
-func (d *Decoder) Next() *Decoder {
-	return NewDecoder(d.Buf.Bytes())
-}
-
-func (d *Decoder) Decode(v interface{}) {
-	_, list := nextEncoding(d.Buf)
-	buf := bytes.NewBuffer(list)
-
-	encoding := func() []byte {
-		prefix, encoding := nextEncoding(buf)
-		return append(prefix, encoding...)
-	}
-
+func (d *Decoder) DecodeList(v interface{}) {
 	switch v := v.(type) {
+
+	// Special case - rlp treats []byte as string so we don't have to iterate it.
+	case *[]uint8:
+		*v = d.nextEncoding()
+
 	case *[]int8:
-		var elem int8
-
-		for buf.Len() > 0 {
-			Decode(encoding(), &elem)
-			*v = append(*v, elem)
-		}
-
+		decodeList(d, v)
 	case *[]int16:
-		var elem int16
-
-		for buf.Len() > 0 {
-			Decode(encoding(), &elem)
-			*v = append(*v, elem)
-		}
-
+		decodeList(d, v)
 	case *[]int32:
-		var elem int32
-
-		for buf.Len() > 0 {
-			Decode(encoding(), &elem)
-			*v = append(*v, elem)
-		}
-
+		decodeList(d, v)
 	case *[]int64:
-		var elem int64
-
-		for buf.Len() > 0 {
-			Decode(encoding(), &elem)
-			*v = append(*v, elem)
-		}
-
+		decodeList(d, v)
 	case *[]uint16:
-		var elem uint16
-
-		for buf.Len() > 0 {
-			Decode(encoding(), &elem)
-			*v = append(*v, elem)
-		}
-
+		decodeList(d, v)
 	case *[]uint32:
-		var elem uint32
-
-		for buf.Len() > 0 {
-			Decode(encoding(), &elem)
-			*v = append(*v, elem)
-		}
-
+		decodeList(d, v)
 	case *[]uint64:
-		var elem uint64
-
-		for buf.Len() > 0 {
-			Decode(encoding(), &elem)
-			*v = append(*v, elem)
-		}
-
+		decodeList(d, v)
 	case *[]float32:
-		var elem float32
-
-		for buf.Len() > 0 {
-			Decode(encoding(), &elem)
-			*v = append(*v, elem)
-		}
-
+		decodeList(d, v)
 	case *[]float64:
-		var elem float64
-
-		for buf.Len() > 0 {
-			Decode(encoding(), &elem)
-			*v = append(*v, elem)
-		}
-
+		decodeList(d, v)
 	default:
-		fmt.Println("Unknown type:")
-		fmt.Println(reflect.TypeOf(v))
+		if !decodeCustom(d, v) {
+			fmt.Println("Unknown type:")
+			fmt.Println(reflect.TypeOf(v))
+		}
 	}
+}
+
+func decodeCustom(d *Decoder, v any) bool {
+	r, ok := v.(ByteSetter)
+	if ok {
+		r.SetBytes(d.nextEncoding())
+		return true
+	}
+
+	return false
+}
+
+func decodeList[T any](d *Decoder, v *[]T) {
+	dd := NewDecoder(d.nextEncoding())
+
+	var elem T
+	for dd.Encodings.Len() > 0 {
+		dd.Decode(&elem)
+		*v = append(*v, elem)
+	}
+}
+
+func decodeInterfaceList[T any](d *Decoder, v *any, a []T) {
+	d.Decode(&a)
+	*v = a
+}
+
+func decodeInterfaceString[T any](d *Decoder, v *any, a T) {
+	d.Decode(&a)
+	*v = a
 }
