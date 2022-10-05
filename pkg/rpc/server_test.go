@@ -1,7 +1,20 @@
+//go:build integration
+// +build integration
+
 package rpc
 
-import "testing"
+import (
+	"testing"
+)
+
+type Custom []byte
 
 func TestStart(t *testing.T) {
-	Start()
+	r := New()
+
+	r.RegisterCommand("ping", func(data []interface{}) string {
+		return "pong"
+	})
+
+	r.Start()
 }
