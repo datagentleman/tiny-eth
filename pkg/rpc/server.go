@@ -2,30 +2,14 @@ package rpc
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 )
 
-var logo = `
-   __      __                            ________  ________  __    __ 
-  /  |    /  |                          /        |/        |/  |  /  |
- _$$ |_   $$/  _______   __    __       $$$$$$$$/ $$$$$$$$/ $$ |  $$ |
-/ $$   |  /  |/       \ /  |  /  |      $$ |__       $$ |   $$ |__$$ |
-$$$$$$/   $$ |$$$$$$$  |$$ |  $$ |      $$    |      $$ |   $$    $$ |
-  $$ | __ $$ |$$ |  $$ |$$ |  $$ |      $$$$$/       $$ |   $$$$$$$$ |
-  $$ |/  |$$ |$$ |  $$ |$$ \__$$ |      $$ |_____    $$ |   $$ |  $$ |
-  $$  $$/ $$ |$$ |  $$ |$$    $$ |      $$       |   $$ |   $$ |  $$ |
-   $$$$/  $$/ $$/   $$/  $$$$$$$ |      $$$$$$$$/    $$/    $$/   $$/ 
-                        /  \__$$ |
-                        $$    $$/                                     
-                         $$$$$$/                                      
-`
-
-type cmd func(data []interface{}) string
+type Cmd func(data []interface{}) string
 
 type rpc struct {
-	commands map[string]cmd
+	commands map[string]Cmd
 }
 
 type params struct {
@@ -34,8 +18,12 @@ type params struct {
 	Id     int
 }
 
-func New() *rpc {
-	return &rpc{commands: map[string]cmd{}}
+func New(commands map[string]Cmd) *rpc {
+	if commands == nil {
+		commands = map[string]Cmd{}
+	}
+
+	return &rpc{commands: commands}
 }
 
 func (r *rpc) handleRequest(w http.ResponseWriter, req *http.Request) {
@@ -43,7 +31,6 @@ func (r *rpc) handleRequest(w http.ResponseWriter, req *http.Request) {
 }
 
 func (r *rpc) Start() {
-	fmt.Println("\033[36m", logo, "\033[0m")
 	http.HandleFunc("/", r.handleRequest)
 
 	err := http.ListenAndServe(":3333", nil)
@@ -52,7 +39,7 @@ func (r *rpc) Start() {
 	}
 }
 
-func (r *rpc) RegisterCommand(name string, c cmd) {
+func (r *rpc) RegisterCommand(name string, c Cmd) {
 	r.commands[name] = c
 }
 

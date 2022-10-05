@@ -9,12 +9,11 @@ import (
 
 type Custom []byte
 
+var TestCommands = map[string]cmd{
+	"ping": func(data []interface{}) string { return "pong" },
+}
+
 func TestStart(t *testing.T) {
-	r := New()
-
-	r.RegisterCommand("ping", func(data []interface{}) string {
-		return "pong"
-	})
-
+	r := New(TestCommands)
 	r.Start()
 }
