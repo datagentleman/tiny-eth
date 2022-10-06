@@ -25,6 +25,13 @@ func (d *Decoder) DecodeList(v interface{}) {
 	case *[]uint8:
 		*v = d.nextEncoding()
 
+	case *[]interface{}:
+		dec := NewDecoder(d.nextEncoding())
+
+		for _, val := range *v {
+			dec.Decode(val)
+		}
+
 	case *[]int8:
 		decodeList(d, v)
 	case *[]int16:
@@ -44,29 +51,23 @@ func (d *Decoder) DecodeList(v interface{}) {
 	case *[]float64:
 		decodeList(d, v)
 	default:
-		if !decodeCustom(d, v) {
-			fmt.Println("Unknown type:")
-			fmt.Println(reflect.TypeOf(v))
+		bs, ok := v.(ByteSetter)
+		if ok {
+			bs.SetBytes(d.nextEncoding())
+			return
 		}
-	}
-}
 
-func decodeCustom(d *Decoder, v any) bool {
-	r, ok := v.(ByteSetter)
-	if ok {
-		r.SetBytes(d.nextEncoding())
-		return true
+		fmt.Println("Unknown type:")
+		fmt.Println(reflect.TypeOf(v))
 	}
-
-	return false
 }
 
 func decodeList[T any](d *Decoder, v *[]T) {
-	dd := NewDecoder(d.nextEncoding())
+	dec := NewDecoder(d.nextEncoding())
 
 	var elem T
-	for dd.Encodings.Len() > 0 {
-		dd.Decode(&elem)
+	for dec.Encodings.Len() > 0 {
+		dec.Decode(&elem)
 		*v = append(*v, elem)
 	}
 }

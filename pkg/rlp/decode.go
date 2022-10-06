@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"math/big"
 	"reflect"
 )
 
@@ -18,6 +19,7 @@ func (d *Decoder) Decode(values ...interface{}) (int, error) {
 
 		// String
 		switch v := v.(type) {
+
 		case *interface{}:
 			d.decodeInterface(v)
 
@@ -78,6 +80,10 @@ func (d *Decoder) Decode(values ...interface{}) (int, error) {
 		case *string:
 			encoding = d.nextEncoding()
 			*v = string(encoding)
+
+		case *big.Int:
+			encoding = d.nextEncoding()
+			v.SetBytes(encoding)
 
 		default:
 			fmt.Println("Unknown type 2:")
@@ -184,6 +190,15 @@ func (d *Decoder) nextEncoding() []byte {
 	if size <= 0xf7 {
 		len := int(size - 0xc0)
 		return d.Encodings.Next(len)
+	}
+
+	if size <= 0xff {
+		len := int(size - 0xf7)
+		buf := d.Encodings.Next(len)
+		ensureLen(&buf, 8)
+
+		size := (int)(binary.BigEndian.Uint64(buf))
+		return d.Encodings.Next(size)
 	}
 
 	fmt.Println("Unknown type")
