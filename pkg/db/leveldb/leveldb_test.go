@@ -4,6 +4,8 @@ import (
 	"errors"
 	"os"
 	"testing"
+
+	"github.com/datagentleman/tiny-eth/pkg/config"
 )
 
 var dbTest *Level
@@ -11,7 +13,12 @@ var dbTest *Level
 func TestMain(m *testing.M) {
 	err := errors.New("")
 
-	dbTest, err = Open(os.Getenv("ETH_CHAIN_PATH"))
+	conf, err := config.Load("../../../config/database.json")
+	if err != nil {
+		panic(err)
+	}
+
+	dbTest, err = Open(conf["path"].(string))
 	if err != nil {
 		panic(err)
 	}

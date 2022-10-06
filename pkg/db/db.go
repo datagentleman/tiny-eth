@@ -1,6 +1,11 @@
 package db
 
-import "github.com/datagentleman/tiny-eth/pkg/db/leveldb"
+import (
+	"fmt"
+
+	"github.com/datagentleman/tiny-eth/pkg/config"
+	"github.com/datagentleman/tiny-eth/pkg/db/leveldb"
+)
 
 var db DB
 
@@ -11,11 +16,18 @@ type DB interface {
 	First(n uint64, prefix []byte) [][]byte
 }
 
-func Open(file string) error {
-	d, err := leveldb.Open(file)
+func init() {
+	conf, err := config.Load("../../../config/database.json")
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	d, err := leveldb.Open(conf["path"].(string))
+	if err != nil {
+		fmt.Println(err)
+	}
 
 	db = d
-	return err
 }
 
 func Get(key []byte) ([]byte, error) {
