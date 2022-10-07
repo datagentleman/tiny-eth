@@ -1,5 +1,5 @@
 package api
 
-func Ping(data []interface{}) string {
+func Ping(data []interface{}) interface{} {
 	return "pong"
 }

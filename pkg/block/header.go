@@ -27,9 +27,9 @@ type Header struct {
 	Nonce       common.BlockNonce
 }
 
-func FindHeader(hash []byte) (*Header, error) {
+func FindHeader(hash *common.Hash) (*Header, error) {
 	headerNumberPrefix := []byte("H")
-	headerNumberKey := append(headerNumberPrefix, hash...)
+	headerNumberKey := append(headerNumberPrefix, hash.Bytes()...)
 
 	data, err := db.Get(headerNumberKey)
 	if err != nil {
@@ -39,7 +39,7 @@ func FindHeader(hash []byte) (*Header, error) {
 	number := binary.BigEndian.Uint64(data)
 
 	headerPrefix := []byte("h")
-	headerKey := append(append(headerPrefix, common.NumberToBytes(number)...), hash...)
+	headerKey := append(append(headerPrefix, common.NumberToBytes(number)...), hash.Bytes()...)
 
 	data, _ = db.Get(headerKey)
 	if err != nil {

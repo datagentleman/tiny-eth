@@ -12,6 +12,16 @@ func (h *Hash) Bytes() []byte {
 	return h[:]
 }
 
+func NewHash(data []byte) *Hash {
+	h := &Hash{}
+
+	for i := range h {
+		h[i] = data[i]
+	}
+
+	return h
+}
+
 type Address [20]byte
 
 func (a *Address) SetBytes(data []byte) {

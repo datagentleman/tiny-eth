@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-type Cmd func(data []interface{}) string
+type Cmd func(data []interface{}) interface{}
 
 type rpc struct {
 	commands map[string]Cmd
@@ -18,6 +18,12 @@ type params struct {
 	Id     int
 }
 
+type response struct {
+	JsonRPC string      `json:"jsonrpc"`
+	ID      string      `json:"id"`
+	Result  interface{} `json:"result"`
+}
+
 func New(commands map[string]Cmd) *rpc {
 	if commands == nil {
 		commands = map[string]Cmd{}
@@ -27,7 +33,11 @@ func New(commands map[string]Cmd) *rpc {
 }
 
 func (r *rpc) handleRequest(w http.ResponseWriter, req *http.Request) {
-	io.WriteString(w, r.callCommand(req))
+	data := r.callCommand(req)
+	res := response{Result: data}
+
+	j, _ := json.Marshal(res)
+	io.WriteString(w, string(j))
 }
 
 func (r *rpc) Start() {
@@ -43,7 +53,7 @@ func (r *rpc) RegisterCommand(name string, c Cmd) {
 	r.commands[name] = c
 }
 
-func (r *rpc) callCommand(req *http.Request) string {
+func (r *rpc) callCommand(req *http.Request) interface{} {
 	b, err := io.ReadAll(req.Body)
 	if err != nil {
 		return err.Error()

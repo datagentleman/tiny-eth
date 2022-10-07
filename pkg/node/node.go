@@ -25,7 +25,8 @@ $$$$$$/   $$ |$$$$$$$  |$$ |  $$ |      $$    |      $$ |   $$    $$ |
 type Node struct{}
 
 var commands = map[string]rpc.Cmd{
-	"ping": api.Ping,
+	"ping":            api.Ping,
+	"eth_blockNumber": api.BlockNumber,
 }
 
 func New() *Node {

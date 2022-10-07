@@ -19,9 +19,9 @@ which was set in BlockChain.loadLastState().
 
 <br />
 
-| Variable                          | Value                    | File                  |
-| --------------------------------- | -------------------------| --------------------- |
-| rawdb.headBlockKey                | []byte("LastBlock")      | ethapi/api.go         |
+| Variable                          | Value                     | File                  |
+| --------------------------------- | ------------------------- | --------------------- |
+| rawdb.headBlockKey                | "LastBlock"               | ethapi/api.go         |
 
 <br />
 

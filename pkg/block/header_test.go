@@ -6,6 +6,7 @@ import (
 	"math/big"
 	"testing"
 
+	"github.com/datagentleman/tiny-eth/pkg/common"
 	"github.com/datagentleman/tiny-eth/pkg/config"
 	"github.com/datagentleman/tiny-eth/pkg/db"
 )
@@ -15,7 +16,7 @@ func TestFindHeader(t *testing.T) {
 	db.Configure(conf)
 
 	headerHash := []byte{35, 32, 71, 217, 213, 95, 254, 81, 128, 185, 134, 176, 57, 191, 244, 155, 28, 152, 253, 196, 86, 253, 50, 46, 210, 205, 255, 116, 94, 211, 232, 226}
-	h, err := FindHeader(headerHash)
+	h, err := FindHeader(common.NewHash(headerHash))
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -34,6 +35,6 @@ func TestFindHeader(t *testing.T) {
 	v1 = big.NewInt(14768770)
 	res = h.Number.Cmp(v1)
 	if res != 0 {
-		t.Errorf("wrong difficulty, expected %, got %d", v1, h.Number)
+		t.Errorf("wrong number, expected %, got %d", v1, h.Number)
 	}
 }

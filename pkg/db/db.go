@@ -22,7 +22,6 @@ func Configure(config map[string]interface{}) {
 	}
 
 	db = d
-
 }
 
 func Get(key []byte) ([]byte, error) {
