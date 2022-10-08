@@ -17,7 +17,7 @@ var TestCommands = map[string]Cmd{
 }
 
 func TestStart(t *testing.T) {
-	conf, _ := config.Load("../../config/database.json")
+	conf, _ := config.Get("database", "test")
 	db.Configure(conf)
 	defer db.Close()
 

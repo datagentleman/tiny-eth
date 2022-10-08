@@ -10,7 +10,6 @@ import (
 var dbTest *Level
 
 func TestMain(m *testing.M) {
-	config.Load("database", "../../../config/database.json")
 	conf, _ := config.Get("database", "test")
 	dbTest, _ = Open(conf)
 

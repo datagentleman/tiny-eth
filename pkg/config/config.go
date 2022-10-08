@@ -6,14 +6,24 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
+	"runtime"
+	"strings"
 )
 
 type section map[string]json.RawMessage
 
-var conf = map[string]section{}
-
 type Config struct {
 	data json.RawMessage
+}
+
+var conf = map[string]section{}
+
+func init() {
+	cp := getConfigPath()
+	db := strings.Join(append(cp, "database.json"), "/")
+
+	Load("database", db)
 }
 
 func Load(key, path string) error {
@@ -63,4 +73,15 @@ func (c *Config) Decode(src any) error {
 	}
 
 	return nil
+}
+
+func getConfigPath() []string {
+	_, p, _, _ := runtime.Caller(0)
+	path := strings.Split(filepath.Dir(p), "/")
+
+	// equivalent of doing 'cd ../../'
+	absolute := path[:len(path)-2]
+
+	absolute = append(absolute, "config")
+	return absolute
 }
