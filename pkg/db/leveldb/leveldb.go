@@ -1,7 +1,9 @@
 package leveldb
 
 import (
+	"github.com/datagentleman/tiny-eth/pkg/config"
 	"github.com/syndtr/goleveldb/leveldb"
+	"github.com/syndtr/goleveldb/leveldb/opt"
 	"github.com/syndtr/goleveldb/leveldb/util"
 )
 
@@ -9,8 +11,16 @@ type Level struct {
 	db *leveldb.DB
 }
 
-func Open(file string) (*Level, error) {
-	db, err := leveldb.OpenFile(file, nil)
+type conf struct {
+	Path     string
+	ReadOnly bool `json:"read_only"`
+}
+
+func Open(config *config.Config) (*Level, error) {
+	c := conf{ReadOnly: false}
+	config.Decode(&c)
+
+	db, err := leveldb.OpenFile(c.Path, &opt.Options{ReadOnly: c.ReadOnly})
 	if err != nil {
 		return nil, err
 	}

@@ -1,3 +1,10 @@
 {
-    "path": "/home/damianu/disc_1/ethereum/geth/chaindata/"
+    "prod": {
+        "path": "/home/damianu/disc_1/ethereum/geth/chaindata/"
+    },
+
+    "test": {
+        "path": "/home/damianu/disc_1/ethereum/geth/chaindata/",
+        "read_only": true
+    }
 }

@@ -3,6 +3,7 @@ package node
 import (
 	"fmt"
 
+	"github.com/datagentleman/tiny-eth/pkg/logger"
 	"github.com/datagentleman/tiny-eth/pkg/node/api"
 	"github.com/datagentleman/tiny-eth/pkg/rpc"
 )
@@ -36,5 +37,9 @@ func New() *Node {
 func (n *Node) Start() {
 	fmt.Println("\033[36m", logo, "\033[0m")
 
-	rpc.New(commands).Start()
+	err := rpc.New(commands).Start()
+	if err != nil {
+		logger.Panic(err)
+		panic(err)
+	}
 }

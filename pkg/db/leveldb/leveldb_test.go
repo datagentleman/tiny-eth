@@ -1,7 +1,6 @@
 package leveldb
 
 import (
-	"errors"
 	"os"
 	"testing"
 
@@ -11,25 +10,11 @@ import (
 var dbTest *Level
 
 func TestMain(m *testing.M) {
-	err := errors.New("")
-
-	conf, err := config.Load("../../../config/database.json")
-	if err != nil {
-		panic(err)
-	}
-
-	dbTest, err = Open(conf["path"].(string))
-	if err != nil {
-		panic(err)
-	}
+	config.Load("database", "../../../config/database.json")
+	conf, _ := config.Get("database", "test")
+	dbTest, _ = Open(conf)
 
 	code := m.Run()
-
-	err = dbTest.Close()
-	if err != nil {
-		panic(err)
-	}
-
 	os.Exit(code)
 }
 

@@ -12,7 +12,8 @@ import (
 )
 
 func TestFindHeader(t *testing.T) {
-	conf, _ := config.Load("../../config/database.json")
+	config.Load("database", "../../config/database.json")
+	conf, _ := config.Get("database", "test")
 	db.Configure(conf)
 
 	headerHash := []byte{35, 32, 71, 217, 213, 95, 254, 81, 128, 185, 134, 176, 57, 191, 244, 155, 28, 152, 253, 196, 86, 253, 50, 46, 210, 205, 255, 116, 94, 211, 232, 226}

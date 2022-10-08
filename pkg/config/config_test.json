@@ -1,0 +1,6 @@
+{
+    "test": {
+        "path": "root",
+        "read_only": true
+    }
+}
