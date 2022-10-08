@@ -9,48 +9,48 @@ import (
 type Logger struct{}
 
 var (
-	info  = log.New(os.Stdout, fmt.Sprint(greenCircle, green, " INFO  ", reset), log.Ldate|log.Ltime)
-	err   = log.New(os.Stdout, fmt.Sprint(fire, red, " ERROR ", reset), log.Ldate|log.Ltime)
-	panic = log.New(os.Stdout, fmt.Sprint(explodingHead, white_on_red, " PANIC ", reset), log.Ldate|log.Ltime)
+	info  = log.New(os.Stdout, fmt.Sprint(pencil, "  ", green_on_green, " INFO  ", reset, " "), log.Ldate|log.Ltime)
+	err   = log.New(os.Stdout, fmt.Sprint(fire, " ", white_on_yellow, " ERROR ", reset, " "), log.Ldate|log.Ltime)
+	panic = log.New(os.Stdout, fmt.Sprint(exploding_head, " ", white_on_red, " PANIC ", reset, " "), log.Ldate|log.Ltime)
 )
 
 // emoji
 var (
-	greenHeart    = "\U0001f49a"
-	fire          = "\U0001f525"
-	explodingHead = "\U0001f92f"
-	pushpin       = "\U0001f4cc"
-	greenCircle   = "\U0001f7e2"
+	pencil         = "\u270f\ufe0f"
+	fire           = "\U0001f525"
+	exploding_head = "\U0001f92f"
 )
 
 // colours
 var (
-	green        = "\033[32m"
-	red          = "\033[31m"
-	white_on_red = "\033[41m"
-	reset        = "\033[0m"
+	green           = "\033[32m"
+	green_on_green  = "\033[32m\033[40m"
+	red             = "\033[31m"
+	white_on_yellow = "\033[20m\033[43m"
+	white_on_red    = "\033[41m"
+	reset           = "\033[0m"
 )
 
-func (l *Logger) Info(msg string) {
+func (l *Logger) Info(msg any) {
 	info.Println(green, msg, reset)
 }
 
-func (l *Logger) Error(msg string) {
+func (l *Logger) Error(msg any) {
 	err.Println(red, msg, reset)
 }
 
-func (l *Logger) Panic(msg string) {
+func (l *Logger) Panic(msg any) {
 	panic.Println(white_on_red, msg, reset)
 }
 
-func Info(msg string) {
+func Info(msg any) {
 	info.Println(green, msg, reset)
 }
 
-func Error(msg string) {
+func Error(msg any) {
 	err.Println(red, msg, reset)
 }
 
-func Panic(msg string) {
+func Panic(msg any) {
 	panic.Println(white_on_red, msg, reset)
 }
