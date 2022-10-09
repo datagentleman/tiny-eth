@@ -29,7 +29,7 @@ type Header struct {
 
 func FindHeader(hash *common.Hash) (*Header, error) {
 	headerNumberPrefix := []byte("H")
-	headerNumberKey := append(headerNumberPrefix, hash.Bytes()...)
+	headerNumberKey := append(headerNumberPrefix, hash[:]...)
 
 	data, err := db.Get(headerNumberKey)
 	if err != nil {
@@ -39,7 +39,7 @@ func FindHeader(hash *common.Hash) (*Header, error) {
 	number := binary.BigEndian.Uint64(data)
 
 	headerPrefix := []byte("h")
-	headerKey := append(append(headerPrefix, common.NumberToBytes(number)...), hash.Bytes()...)
+	headerKey := append(append(headerPrefix, common.NumberToBytes(number)...), hash[:]...)
 
 	data, _ = db.Get(headerKey)
 	if err != nil {

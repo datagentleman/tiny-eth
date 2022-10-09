@@ -1,59 +1,64 @@
 package common
 
+// Hash
 type Hash [32]byte
 
-func (h *Hash) SetBytes(data []byte) {
-	if len(h) == len(data) {
-		_ = append(h[:0], data...)
-	}
-}
-
-func (h *Hash) Bytes() []byte {
-	return h[:]
-}
-
 func NewHash(data []byte) *Hash {
-	h := &Hash{}
-
-	for i := range h {
-		h[i] = data[i]
-	}
-
-	return h
+	return new(&Hash{}, data)
 }
 
+func (h *Hash) SetBytes(data []byte) {
+	setBytes(h, data)
+}
+
+// Address
 type Address [20]byte
 
+func NewAddress(data []byte) *Address {
+	return new(&Address{}, data)
+}
+
 func (a *Address) SetBytes(data []byte) {
-	if len(a) == len(data) {
-		_ = append(a[:0], data...)
-	}
+	setBytes(a, data)
 }
 
-func (a *Address) Bytes() []byte {
-	return a[:]
-}
-
+// Bloom
 type Bloom [256]byte
 
+func NewBloom(data []byte) *Bloom {
+	return new(&Bloom{}, data)
+}
+
 func (b *Bloom) SetBytes(data []byte) {
-	if len(b) == len(data) {
-		_ = append(b[:0], data...)
-	}
+	setBytes(b, data)
 }
 
-func (b *Bloom) Bytes() []byte {
-	return b[:]
-}
-
+// BlockNonce
 type BlockNonce [8]byte
 
+func NewBlockNonce(data []byte) *BlockNonce {
+	return new(&BlockNonce{}, data)
+}
+
 func (n *BlockNonce) SetBytes(data []byte) {
-	if len(n) == len(data) {
-		_ = append(n[:0], data...)
+	setBytes(n, data)
+}
+
+type Hashes interface {
+	*Hash | *Address | *BlockNonce | *Bloom
+}
+
+func setBytes[T Hashes](a T, data []byte) {
+	if len(data) > len(a) {
+		data = data[:len(a)]
+	}
+
+	for i := 0; i < len(data); i++ {
+		a[i] = data[i]
 	}
 }
 
-func (n *BlockNonce) Bytes() []byte {
-	return n[:]
+func new[T Hashes](a T, data []byte) T {
+	setBytes(a, data)
+	return a
 }

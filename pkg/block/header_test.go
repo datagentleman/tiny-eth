@@ -22,7 +22,7 @@ func TestFindHeader(t *testing.T) {
 	}
 
 	h1 := []byte{115, 75, 181, 67, 250, 79, 27, 103, 109, 14, 125, 22, 39, 201, 197, 110, 147, 69, 82, 77, 112, 56, 18, 23, 189, 253, 52, 123, 9, 91, 128, 95}
-	if !bytes.Equal(h.ParentHash.Bytes(), h1) {
+	if !bytes.Equal(h.ParentHash[:], h1) {
 		t.Errorf("wrong hash, expected %x, got %x", h1, h.ParentHash)
 	}
 
