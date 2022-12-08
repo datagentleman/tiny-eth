@@ -74,6 +74,23 @@ func isList(v interface{}) bool {
 	return slice || array
 }
 
+// TODO: also handle no pointer case
+func isStruct(v interface{}) bool {
+	if isPointer(v) {
+		ptr := reflect.TypeOf(v)
+		return ptr.Elem().Kind() == reflect.Struct
+	}
+
+	return false
+}
+
+func isList2(v reflect.Value) bool {
+	slice := v.Kind() == reflect.Slice
+	array := v.Kind() == reflect.Array
+
+	return slice || array
+}
+
 func isPointer(v interface{}) bool {
 	return reflect.TypeOf(v).Kind() == reflect.Pointer
 }

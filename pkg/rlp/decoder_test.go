@@ -2,8 +2,11 @@ package rlp
 
 import (
 	"bytes"
+	"fmt"
 	"reflect"
 	"testing"
+
+	"github.com/ethereum/go-ethereum/rlp"
 )
 
 type decodeTest struct {
@@ -13,8 +16,17 @@ type decodeTest struct {
 
 type TestCustomType []byte
 
-func (c *TestCustomType) SetBytes(b []byte) {
-	*c = append(*c, b...)
+type TestCustomClass struct {
+	A1   string
+	A2   *string
+	B1   uint
+	B2   *uint
+	C1   uint16
+	C2   *uint16
+	D1   []byte
+	D2   *[]byte
+	CT1  TestCustomType
+	CT11 *TestCustomType
 }
 
 var decodeTests = []decodeTest{
@@ -55,7 +67,7 @@ var decodeBytes = []decodeTest{
 }
 
 var decodeSlice = []decodeTest{
-	// List
+	// Lists
 	{src: []int8{127, -127}, dst: []int8{}},
 	{src: []int16{32767, -32767}, dst: []int16{}},
 	{src: []int32{2147483647, -2147483647}, dst: []int32{}},
@@ -95,14 +107,37 @@ func TestDecode(t *testing.T) {
 	}
 }
 
-func TestDecodeCustom(t *testing.T) {
-	src := TestCustomType{100, 200}
-	dst := TestCustomType{}
+func TestDecodeStruct(t *testing.T) {
+	s := string("Lorem ipsum dolor sit amet")
+	u := uint(127)
+	u16 := uint16(127)
+	b := []byte{1, 2, 3}
+	ct := TestCustomType{10, 20, 30}
 
-	dec := NewDecoder(Encode(src))
+	src := TestCustomClass{
+		A1:   s,
+		A2:   &s,
+		B1:   u,
+		B2:   &u,
+		C1:   u16,
+		C2:   &u16,
+		D1:   b,
+		D2:   &b,
+		CT1:  ct,
+		CT11: &ct,
+	}
+
+	dst := TestCustomClass{}
+
+	encoding, err := rlp.EncodeToBytes(&src)
+	if err != nil {
+		fmt.Printf("ERROR: %s\n", err)
+	}
+
+	dec := NewDecoder(encoding)
 	dec.Decode(&dst)
 
 	if !(reflect.DeepEqual(src, dst)) {
-		t.Errorf("Rlp decoding error. Expected %d got %d", src, dst)
+		t.Errorf("rlp struct decoding error.\n Expected: %v\n Received: %v", src, dst)
 	}
 }
