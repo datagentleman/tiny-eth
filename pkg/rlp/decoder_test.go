@@ -1,7 +1,6 @@
 package rlp
 
 import (
-	"bytes"
 	"fmt"
 	"reflect"
 	"testing"
@@ -61,13 +60,11 @@ var decodeTests = []decodeTest{
 	{src: string("Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet"), dst: string("")},
 }
 
-var decodeBytes = []decodeTest{
-	{src: make([]byte, 55), dst: []byte{}},
-	{src: make([]byte, 1024), dst: []byte{}},
-}
-
 var decodeSlice = []decodeTest{
 	// Lists
+	{src: make([]byte, 55), dst: []byte{}},
+	{src: make([]byte, 1024), dst: []byte{}},
+
 	{src: []int8{127, -127}, dst: []int8{}},
 	{src: []int16{32767, -32767}, dst: []int16{}},
 	{src: []int32{2147483647, -2147483647}, dst: []int32{}},
@@ -81,7 +78,7 @@ var decodeSlice = []decodeTest{
 	{src: []float64{1.7e+308, 2.2e-308}, dst: []float64{}},
 }
 
-func TestDecode(t *testing.T) {
+func TestDecodeStrings(t *testing.T) {
 	for _, example := range decodeTests {
 		dec := NewDecoder(Encode(example.src))
 		dec.Decode(&example.dst)
@@ -89,15 +86,9 @@ func TestDecode(t *testing.T) {
 			t.Errorf("Rlp decoding error. Expected\n %d got\n %d\n", example.src, example.dst)
 		}
 	}
+}
 
-	for _, example := range decodeBytes {
-		dec := NewDecoder(Encode(example.src))
-		dec.Decode(&example.dst)
-		if !bytes.Equal(example.src.([]byte), example.dst.([]byte)) {
-			t.Errorf("Rlp decoding error. Expected %d got %d\n", example.src, example.dst)
-		}
-	}
-
+func TestDecodeLists(t *testing.T) {
 	for _, example := range decodeSlice {
 		dec := NewDecoder(Encode(example.src))
 		dec.Decode(&example.dst)
@@ -107,7 +98,7 @@ func TestDecode(t *testing.T) {
 	}
 }
 
-func TestDecodeStruct(t *testing.T) {
+func TestDecodeStructs(t *testing.T) {
 	s := string("Lorem ipsum dolor sit amet")
 	u := uint(127)
 	u16 := uint16(127)

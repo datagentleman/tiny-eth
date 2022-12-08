@@ -68,6 +68,8 @@ func encode(d *Decoder, val reflect.Value) error {
 		}
 
 	case reflect.Slice, reflect.Array:
+		// TODO: add special []byte decoding
+
 		d := NewDecoder(d.nextEncoding())
 		tmp := createValue(reflect.TypeOf(val.Interface()).Elem()).Elem()
 
