@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"math"
+	"math/big"
 	"reflect"
 )
 
@@ -17,78 +18,76 @@ func NewDecoder(encodings []byte) *Decoder {
 }
 
 func (d *Decoder) Decode(v interface{}) error {
-	val := getValue(v)
+	val := reflect.ValueOf(v)
 
-	val1 := val
-	if val.Kind() == reflect.Interface {
-		val1 = val.Elem()
-	}
-
-	// Struct || Lists
-	if isStruct(v) || isList2(val1) {
-		encode(d, val)
-		return nil
-	}
-
-	// Strings
-	d.set(val)
+	decode(d, val)
 	return nil
 }
 
-func getValue(elem interface{}) reflect.Value {
-	val := reflect.ValueOf(elem)
+func kind(v reflect.Value) reflect.Kind {
+	kind := v
 
-	if val.Kind() == reflect.Ptr {
-		val = val.Elem()
+	for kind.Kind() == reflect.Ptr || kind.Kind() == reflect.Interface {
+		kind = kind.Elem()
 	}
 
-	return val
+	return kind.Kind()
 }
 
-func encode(d *Decoder, val reflect.Value) error {
+func decode(d *Decoder, val reflect.Value) error {
 	// create and set element
 	if val.Kind() == reflect.Ptr && val.IsZero() {
 		val.Set(createValue(val.Type()))
 		val = val.Elem()
 	}
 
-	tmp := val
-
-	if tmp.Kind() == reflect.Interface {
-		tmp = val.Elem()
+	for val.Kind() == reflect.Ptr {
+		val = val.Elem()
 	}
 
-	switch tmp.Kind() {
+	// Check exotic cases not supported by reflect.Kind
+	switch val.Interface().(type) {
+	case big.Int, *big.Int:
+		d.set(val)
+		return nil
+	}
 
+	switch kind(val) {
 	case reflect.Struct:
 		d := NewDecoder(d.nextEncoding())
 
 		for i := 0; i < val.NumField(); i++ {
 			field := val.Field(i)
-			encode(d, field)
+			decode(d, field)
 		}
 
-	case reflect.Slice, reflect.Array:
-		// TODO: add special []byte decoding
-
+	case reflect.Slice:
 		d := NewDecoder(d.nextEncoding())
 		tmp := createValue(reflect.TypeOf(val.Interface()).Elem()).Elem()
 
-		list := val
-		if list.Kind() == reflect.Interface {
-			list = val.Elem()
+		slice := val
+		if slice.Kind() == reflect.Interface {
+			slice = val.Elem()
 		}
 
-		// Iterate all elements from encoding
+		// Iterate all elements
 		for d.Encodings.Len() > 0 {
 			d.set(tmp)
-			list = reflect.Append(list, tmp)
+			slice = reflect.Append(slice, tmp)
 		}
 
-		val.Set(list)
+		val.Set(slice)
+
+	case reflect.Array:
+		// TODO: For now this only handle []byte array
+		dec := NewDecoder(d.nextEncoding())
+
+		array := reflect.New(reflect.TypeOf(val.Interface())).Elem()
+		reflect.Copy(array, reflect.ValueOf(dec.Encodings.Bytes()))
+
+		val.Set(array)
 
 	default:
-		// set basic types
 		d.set(val)
 	}
 
@@ -98,7 +97,7 @@ func encode(d *Decoder, val reflect.Value) error {
 func createValue(t reflect.Type) reflect.Value {
 	typ := reflect.PtrTo(t).Elem()
 
-	// iterate until element won't be a pointer
+	// iterate until element no longer be pointer
 	for typ.Kind() == reflect.Ptr {
 		typ = typ.Elem()
 	}
@@ -107,19 +106,7 @@ func createValue(t reflect.Type) reflect.Value {
 }
 
 func (d *Decoder) set(val reflect.Value) {
-	isPointer := val.Kind() == reflect.Ptr
-
-	tmp := val.Type()
-
-	if isPointer {
-		tmp = tmp.Elem()
-	}
-
-	if tmp.Kind() == reflect.Interface {
-		tmp = val.Elem().Type()
-	}
-
-	switch tmp.Kind() {
+	switch kind(val) {
 
 	case reflect.String:
 		encoding := d.nextEncoding()
@@ -194,8 +181,25 @@ func (d *Decoder) set(val reflect.Value) {
 		tmp := math.Float64frombits(binary.BigEndian.Uint64(encoding))
 		val.Set(reflect.ValueOf(tmp))
 
+	case reflect.Array, reflect.Slice:
+		decode(d, val)
+
 	default:
-		fmt.Println("UNKNOWN TYPE")
+		switch val.Interface().(type) {
+		case big.Int:
+			encoding := d.nextEncoding()
+			b := new(big.Int).SetBytes(encoding)
+			val.Set(reflect.ValueOf(b).Elem())
+			return
+
+		case *big.Int:
+			encoding := d.nextEncoding()
+			b := new(big.Int).SetBytes(encoding)
+			val.Set(reflect.ValueOf(b))
+			return
+		}
+
+		fmt.Printf("UNKNOWN TYPE: %s\n", kind(val))
 	}
 }
 
@@ -205,6 +209,7 @@ func (d *Decoder) nextEncoding() []byte {
 	}
 
 	firstByte := d.Encodings.Next(1)
+
 	size := firstByte[0]
 
 	if size <= 0x7f {

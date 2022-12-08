@@ -2,6 +2,7 @@ package rlp
 
 import (
 	"bytes"
+	"fmt"
 	"math/big"
 	"testing"
 
@@ -169,4 +170,31 @@ func TestEncode(t *testing.T) {
 			t.Errorf("\ntest %d: output mismatch:\ngot   %X\nwant  %X\n", i, tiny, original)
 		}
 	}
+}
+
+type A struct {
+	Name  []byte
+	Name2 [20]byte
+}
+
+func TestEncodeBytes(t *testing.T) {
+	example := []byte{10, 20, 30}
+	b, _ := orig.EncodeToBytes(example)
+	fmt.Println(b)
+	fmt.Println(Encode(example))
+
+	example2 := make([]byte, 20)
+	b2, _ := orig.EncodeToBytes(example2)
+	fmt.Println(b2)
+	fmt.Println(Encode(example2))
+
+	example3 := [20]byte{}
+	b3, _ := orig.EncodeToBytes(example3)
+	fmt.Println(b3)
+	fmt.Println(Encode(example3))
+
+	example4 := A{Name: []byte{1, 2, 3}, Name2: [20]byte{}}
+	b4, _ := orig.EncodeToBytes(example4)
+	fmt.Println(b4)
+	fmt.Println(Encode(example4))
 }

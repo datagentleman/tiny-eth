@@ -2,9 +2,11 @@ package rlp
 
 import (
 	"fmt"
+	"math/big"
 	"reflect"
 	"testing"
 
+	"github.com/datagentleman/tiny-eth/pkg/common"
 	"github.com/ethereum/go-ethereum/rlp"
 )
 
@@ -26,6 +28,10 @@ type TestCustomClass struct {
 	D2   *[]byte
 	CT1  TestCustomType
 	CT11 *TestCustomType
+
+	H1 common.Hash
+	H2 *common.Hash
+	H3 []common.Hash
 }
 
 var decodeTests = []decodeTest{
@@ -56,6 +62,8 @@ var decodeTests = []decodeTest{
 	{src: float64(1.7e+308), dst: float64(0)},
 	{src: float64(2.2e-308), dst: float64(0)},
 
+	{src: big.NewInt(99999), dst: big.NewInt(0)},
+
 	{src: string("Lorem ipsum dolor sit amet"), dst: string("")},
 	{src: string("Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet"), dst: string("")},
 }
@@ -64,6 +72,8 @@ var decodeSlice = []decodeTest{
 	// Lists
 	{src: make([]byte, 55), dst: []byte{}},
 	{src: make([]byte, 1024), dst: []byte{}},
+
+	{src: [32]byte{1, 2, 3}, dst: [32]byte{}},
 
 	{src: []int8{127, -127}, dst: []int8{}},
 	{src: []int16{32767, -32767}, dst: []int16{}},
@@ -104,6 +114,8 @@ func TestDecodeStructs(t *testing.T) {
 	u16 := uint16(127)
 	b := []byte{1, 2, 3}
 	ct := TestCustomType{10, 20, 30}
+	ch := common.Hash{100, 200}
+	ch2 := []common.Hash{{100, 200}}
 
 	src := TestCustomClass{
 		A1:   s,
@@ -116,6 +128,9 @@ func TestDecodeStructs(t *testing.T) {
 		D2:   &b,
 		CT1:  ct,
 		CT11: &ct,
+		H1:   ch,
+		H2:   &ch,
+		H3:   ch2,
 	}
 
 	dst := TestCustomClass{}
