@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"math"
 	"reflect"
 )
 
@@ -184,17 +185,13 @@ func (d *Decoder) set(val reflect.Value) {
 	case reflect.Float32:
 		encoding := d.nextEncoding()
 		ensureLen(&encoding, 4)
-		buf := bytes.NewReader(encoding)
-		tmp := float32(0)
-		binary.Read(buf, binary.BigEndian, &tmp)
+		tmp := math.Float32frombits(binary.BigEndian.Uint32(encoding))
 		val.Set(reflect.ValueOf(tmp))
 
 	case reflect.Float64:
 		encoding := d.nextEncoding()
 		ensureLen(&encoding, 8)
-		buf := bytes.NewReader(encoding)
-		tmp := float64(0)
-		binary.Read(buf, binary.BigEndian, &tmp)
+		tmp := math.Float64frombits(binary.BigEndian.Uint64(encoding))
 		val.Set(reflect.ValueOf(tmp))
 
 	default:
